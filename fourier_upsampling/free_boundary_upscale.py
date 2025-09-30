@@ -1,7 +1,6 @@
 # note that I used chatgpt a lot for this file (possible mistakes are not my fault)
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def build_dictionary_at(t, N, Kc=None, Ks=None, include_const=True, include_linear=True):

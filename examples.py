@@ -3,9 +3,13 @@ import matplotlib as mpl
 from matplotlib import pyplot as plt
 from numpy.fft import fft
 
-from modules.dct_upscale import upscale_region_via_dct, dct_upscale_with_boundaries
-from modules.fft_upscale import spectral_upscale, dirichlet_upscale_zoomfft
-from modules.free_boundary_upscale import free_boundary_upscale
+from fourier_upsampling import (
+    dct_upscale_with_boundaries,
+    dirichlet_upscale_zoomfft,
+    free_boundary_upscale,
+    spectral_upscale,
+    upscale_region_via_dct,
+)
 
 mpl.use("TkAgg")
 

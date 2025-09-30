@@ -1,7 +1,11 @@
 import numpy as np
 from scipy.signal import czt
 
-from modules.continuity_creator import make_periodic, fit_line_on_edges, add_line_on_upsampled_grid
+from .continuity_creator import (
+    add_line_on_upsampled_grid,
+    fit_line_on_edges,
+    make_periodic,
+)
 
 
 def dirichlet_upscale_zoomfft(X, start, end, q):
