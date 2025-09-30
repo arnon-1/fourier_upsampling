@@ -80,15 +80,12 @@ def dct_upscale_with_boundaries(
     """
     x = np.asarray(x, float)
     N = x.size
-    q = int(q)
-    if q <= 0:
+    if not isinstance(q, int) or q <= 0:
         raise ValueError("q must be a positive integer")
 
     # Free space to each upsampled boundary
     free_left_up = int(start-q)
     free_right_up = int((N-1) * q - end)
-    if free_left_up <= 0 or free_right_up <= 0:
-        raise ValueError("too close to boundary")
 
     # Convert to base-grid samples available on each side
     free_left_base = free_left_up // q
@@ -106,7 +103,7 @@ def dct_upscale_with_boundaries(
 
     # Validate per side
     if mL <= 0 or mR <= 0:
-        raise ValueError("too close to boundary")
+        print("Warning: too close to boundary for accurate results")
     if mL > free_left_base:
         raise ValueError("too many samples in left boundary layer")
     if mR > free_right_base:
@@ -135,13 +132,13 @@ def dct_upscale_with_boundaries(
 
     one_minus_wR = 1.0 - wR
     denomR = one_minus_wR.sum()
-    xR = x[-mR:]
+    xR = x[N-mR:]
     cR = (one_minus_wR * xR).sum() / denomR if denomR > 0 else float(x[-1])
 
     # Blend boundaries independently
     x_mod = x.copy()
     x_mod[:mL] = wL * x[:mL] + (1.0 - wL) * cL
-    x_mod[-mR:] = wR * x[-mR:] + (1.0 - wR) * cR
+    x_mod[N-mR:] = wR * x[N-mR:] + (1.0 - wR) * cR
 
     # Reflective DCT upscaling on the blended signal
     return upscale_region_via_dct(x_mod, int(start), int(end), q)
