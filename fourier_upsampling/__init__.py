@@ -1,5 +1,5 @@
 from .dct_upscale import (
-    reconstruct_region_from_coeffs,
+    reconstruct_region_from_dct_coeffs,
     upscale_region_via_dct,
     dct_upscale_with_boundaries,
 )
@@ -16,7 +16,7 @@ from .continuity_creator import (
 )
 
 __all__ = [
-    "reconstruct_region_from_coeffs",
+    "reconstruct_region_from_dct_coeffs",
     "upscale_region_via_dct",
     "dct_upscale_with_boundaries",
     "dirichlet_upscale_zoomfft",

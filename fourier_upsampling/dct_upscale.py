@@ -3,7 +3,7 @@ from scipy.signal import czt
 from scipy.fft import dct
 
 
-def reconstruct_region_from_coeffs(C, N, start, end, q):
+def reconstruct_region_from_dct_coeffs(C, N, start, end, q):
     """
     Fast reconstruction on a dense grid in the *time* window [start, end),
     evaluated at t = start, start+1/r, ..., end-1   (length (end-start)*r).
@@ -39,7 +39,7 @@ def upscale_region_via_dct(x, start, end, q):
     N = x.size
     # SciPy DCT-II with orthonormal scaling
     C = dct(x, type=2, norm='ortho')
-    return reconstruct_region_from_coeffs(C, N, start, end, q)
+    return reconstruct_region_from_dct_coeffs(C, N, start, end, q)
 
 
 def dct_upscale_with_boundaries(
