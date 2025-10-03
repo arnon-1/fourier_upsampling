@@ -3,17 +3,17 @@ from scipy.signal import czt
 from scipy.fft import dct
 
 
-def reconstruct_region_from_coeffs(C, N, start, end, r):
+def reconstruct_region_from_coeffs(C, N, start, end, q):
     """
     Fast reconstruction on a dense grid in the *time* window [start, end),
     evaluated at t = start, start+1/r, ..., end-1   (length (end-start)*r).
 
     Assumes C are DCT-II coefficients computed with norm='ortho'.
     """
-    assert 0 <= start < end <= N * r
+    assert 0 <= start < end <= N * q
     end -= 1  # exclusive -> inclusive
-    assert r >= 1 and int(r) == r
-    r = int(r)
+    assert q >= 1 and int(q) == q
+    q = int(q)
 
     # weights for orthonormal DCT-II basis: alpha_0 = 1/sqrt(2), alpha_k = 1
     Xk = C.copy()
@@ -21,15 +21,15 @@ def reconstruct_region_from_coeffs(C, N, start, end, r):
 
     # CZT over k to evaluate the cosine series at t = start + m/r
     M = (end - start) + 1
-    A = np.exp(-1j * (np.pi / N) * (start / r + 0.5))  # start of t
-    W = np.exp(1j * (np.pi / N) * (1.0 / r))  # step of 1/r in t
+    A = np.exp(-1j * (np.pi / N) * (start / q + 0.5))  # start of t
+    W = np.exp(1j * (np.pi / N) * (1.0 / q))  # step of 1/r in t
     S = czt(Xk, m=M, w=W, a=A)
 
     # overall scale for orthonormal DCT basis
     return np.sqrt(2.0 / N) * np.real(S)
 
 
-def upscale_region_via_dct(x, start, end, r):
+def upscale_region_via_dct(x, start, end, q):
     """
     Upscale only the time-domain region [start, end) by factor r using a DCT-II model.
     So it assumes reflective boundaries.
@@ -39,7 +39,7 @@ def upscale_region_via_dct(x, start, end, r):
     N = x.size
     # SciPy DCT-II with orthonormal scaling
     C = dct(x, type=2, norm='ortho')
-    return reconstruct_region_from_coeffs(C, N, start, end, r)
+    return reconstruct_region_from_coeffs(C, N, start, end, q)
 
 
 def dct_upscale_with_boundaries(
