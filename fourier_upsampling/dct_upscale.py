@@ -3,17 +3,17 @@ from scipy.signal import czt
 from scipy.fft import dct
 
 
-def reconstruct_region_from_coeffs(C, N, start, end, r):
+def reconstruct_region_from_dct_coeffs(C, N, start, end, q):
     """
-    Fast reconstruction on a dense grid in the *time* window [start, end],
-    evaluated at t = start, start+1/r, ..., end   (length (end-start)*r + 1).
+    Fast reconstruction on a dense grid in the *time* window [start, end),
+    evaluated at t = start, start+1/r, ..., end-1   (length (end-start)*r).
 
     Assumes C are DCT-II coefficients computed with norm='ortho'.
     """
-    assert 0 <= start < end < N * r
+    assert 0 <= start < end <= N * q
     end -= 1  # exclusive -> inclusive
-    assert r >= 1 and int(r) == r
-    r = int(r)
+    assert q >= 1 and int(q) == q
+    q = int(q)
 
     # weights for orthonormal DCT-II basis: alpha_0 = 1/sqrt(2), alpha_k = 1
     Xk = C.copy()
@@ -21,25 +21,25 @@ def reconstruct_region_from_coeffs(C, N, start, end, r):
 
     # CZT over k to evaluate the cosine series at t = start + m/r
     M = (end - start) + 1
-    A = np.exp(-1j * (np.pi / N) * (start / r + 0.5))  # start of t
-    W = np.exp(1j * (np.pi / N) * (1.0 / r))  # step of 1/r in t
+    A = np.exp(-1j * (np.pi / N) * (start / q + 0.5))  # start of t
+    W = np.exp(1j * (np.pi / N) * (1.0 / q))  # step of 1/r in t
     S = czt(Xk, m=M, w=W, a=A)
 
     # overall scale for orthonormal DCT basis
     return np.sqrt(2.0 / N) * np.real(S)
 
 
-def upscale_region_via_dct(x, start, end, r):
+def upscale_region_via_dct(x, start, end, q):
     """
-    Upscale only the time-domain region [start, end] by factor r using a DCT-II model.
+    Upscale only the time-domain region [start, end) by factor r using a DCT-II model.
     So it assumes reflective boundaries.
-    Returns samples at t = start..end in 1/r steps.
+    Returns samples at t = start..end-1 in 1/r steps.
     """
     x = np.asarray(x, float)
     N = x.size
     # SciPy DCT-II with orthonormal scaling
     C = dct(x, type=2, norm='ortho')
-    return reconstruct_region_from_coeffs(C, N, start, end, r)
+    return reconstruct_region_from_dct_coeffs(C, N, start, end, q)
 
 
 def dct_upscale_with_boundaries(
@@ -80,15 +80,12 @@ def dct_upscale_with_boundaries(
     """
     x = np.asarray(x, float)
     N = x.size
-    q = int(q)
-    if q <= 0:
+    if not isinstance(q, int) or q <= 0:
         raise ValueError("q must be a positive integer")
 
     # Free space to each upsampled boundary
-    free_left_up = int(start-q)
-    free_right_up = int((N-1) * q - end)
-    if free_left_up <= 0 or free_right_up <= 0:
-        raise ValueError("too close to boundary")
+    free_left_up = int(start)
+    free_right_up = int(N * q - (end-1))
 
     # Convert to base-grid samples available on each side
     free_left_base = free_left_up // q
@@ -96,8 +93,8 @@ def dct_upscale_with_boundaries(
 
     # Resolve mL, mR
     if boundary_samples is None:
-        mL = int(np.sqrt(max(free_left_base, 0) * 3))
-        mR = int(np.sqrt(max(free_right_base, 0) * 3))
+        mL = int(np.sqrt(max(free_left_base-1, 0) * 3))
+        mR = int(np.sqrt(max(free_right_base-1, 0) * 3))
     else:
         if np.isscalar(boundary_samples):
             mL = mR = int(boundary_samples)
@@ -106,7 +103,7 @@ def dct_upscale_with_boundaries(
 
     # Validate per side
     if mL <= 0 or mR <= 0:
-        raise ValueError("too close to boundary")
+        print("Warning: too close to boundary for accurate results")
     if mL > free_left_base:
         raise ValueError("too many samples in left boundary layer")
     if mR > free_right_base:
@@ -135,13 +132,13 @@ def dct_upscale_with_boundaries(
 
     one_minus_wR = 1.0 - wR
     denomR = one_minus_wR.sum()
-    xR = x[-mR:]
+    xR = x[N-mR:]
     cR = (one_minus_wR * xR).sum() / denomR if denomR > 0 else float(x[-1])
 
     # Blend boundaries independently
     x_mod = x.copy()
     x_mod[:mL] = wL * x[:mL] + (1.0 - wL) * cL
-    x_mod[-mR:] = wR * x[-mR:] + (1.0 - wR) * cR
+    x_mod[N-mR:] = wR * x[N-mR:] + (1.0 - wR) * cR
 
     # Reflective DCT upscaling on the blended signal
     return upscale_region_via_dct(x_mod, int(start), int(end), q)
