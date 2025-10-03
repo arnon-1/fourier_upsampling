@@ -135,7 +135,7 @@ def test_matches_reference_many_cases():
                                                                  "original at known points")
 
 
-def test_constant_signals():  # TODO: other functions as well
+def test_constant_signals():
     rng = np.random.default_rng(0)
     cases = [
         (32, 4, 0, 64),
