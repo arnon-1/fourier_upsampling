@@ -14,8 +14,6 @@ For general upscaling tasks without specific boundary assumptions, `dct_upscale_
 * Python
 * [NumPy](https://numpy.org/)
 * [SciPy](https://scipy.org/)
-* [Matplotlib](https://matplotlib.org/) (only needed for the demo plots in `examples.py`)
-
 Install the dependencies with pip:
 
 ```bash
@@ -73,19 +71,17 @@ large upsampling factors.
 
 ## Boundary handling overview
 
-* **Periodic** – `dirichlet_upscale_zoomfft` combines a zero-padded spectrum with
-a chirp z-transform evaluator. This reproduces true FFT-based interpolation
-without the need to construct the full high-resolution array.
+* **Periodic** – `dirichlet_upscale_zoomfft` identical to zero padding in the Fourier domain, transforming back and slicing, but more efficient.
 
 * **Reflective** – `upscale_region_via_dct` works in the DCT-II domain,
-applying the transform before upsampling.
+applying the transform before upsampling. Slightly faster than the above method.
 
-* **Free / blended** – `spectral_upscale` subtracts a weighted line fit,
-periodicises the residual, then restores the trend.  
+* **Free / blended** – `spectral_upscale` uses periodic boundaries but subtracts a weighted line fit,
+periodicises the residual by blending the edges, then restores the trend.  
+`dct_upscale_with_boundaries` also uses reflective boundaries but applies
+smoothing to the result, which in practice often gives the best outcome.  
   `free_boundary_upscale` solves a ridge-regularised least squares problem in an
-overcomplete dictionary of DCT and DST basis functions to smoothly extrapolate the edges.  
-  `dct_upscale_with_boundaries` also uses reflective boundaries but applies
-smoothing to the result, which in practice often gives the best outcome.
+overcomplete dictionary of DCT and DST basis functions to smoothly extrapolate the edges. This is relatively slow.
 
 
 ## Examples and comparison plots
