@@ -1,10 +1,10 @@
-# Fourier Upsampling Toolkit
+# Fourier Upsampling methods
 
 A small collection of upsampling utilities that lean on Fourier
 analysis. I wrote some of them for other projects and decided that it might be useful to share them.
 
 The repository deals with localised upsampling: evaluating a dense slice of a coarsely sampled 1D signal without the need for zero-padding or reconstructing the entire high-resolution grid.
-This is similar to FFT with zero padding (Dirichlet kernel interpolation), but implemented more efficiently using the [CZT](https://en.wikipedia.org/wiki/Chirp_Z-transform).
+This is similar to FFT with zero padding (Dirichlet kernel interpolation), but implemented more efficiently using the [CZT](https://ccrma.stanford.edu/~jos/st/Bluestein_s_FFT_Algorithm.html).
 
 Several boundary conditions are supported, including periodic, reflective (DCT), and “free” boundaries.
 For general upscaling tasks without specific boundary assumptions, `dct_upscale_with_boundaries` is usually the most convenient choice.
@@ -14,6 +14,7 @@ For general upscaling tasks without specific boundary assumptions, `dct_upscale_
 * Python
 * [NumPy](https://numpy.org/)
 * [SciPy](https://scipy.org/)
+
 Install the dependencies with pip:
 
 ```bash
