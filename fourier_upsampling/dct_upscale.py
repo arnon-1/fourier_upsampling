@@ -5,12 +5,12 @@ from scipy.fft import dct
 
 def reconstruct_region_from_coeffs(C, N, start, end, r):
     """
-    Fast reconstruction on a dense grid in the *time* window [start, end],
-    evaluated at t = start, start+1/r, ..., end   (length (end-start)*r + 1).
+    Fast reconstruction on a dense grid in the *time* window [start, end),
+    evaluated at t = start, start+1/r, ..., end-1   (length (end-start)*r).
 
     Assumes C are DCT-II coefficients computed with norm='ortho'.
     """
-    assert 0 <= start < end < N * r
+    assert 0 <= start < end <= N * r
     end -= 1  # exclusive -> inclusive
     assert r >= 1 and int(r) == r
     r = int(r)
@@ -31,9 +31,9 @@ def reconstruct_region_from_coeffs(C, N, start, end, r):
 
 def upscale_region_via_dct(x, start, end, r):
     """
-    Upscale only the time-domain region [start, end] by factor r using a DCT-II model.
+    Upscale only the time-domain region [start, end) by factor r using a DCT-II model.
     So it assumes reflective boundaries.
-    Returns samples at t = start..end in 1/r steps.
+    Returns samples at t = start..end-1 in 1/r steps.
     """
     x = np.asarray(x, float)
     N = x.size
@@ -84,8 +84,8 @@ def dct_upscale_with_boundaries(
         raise ValueError("q must be a positive integer")
 
     # Free space to each upsampled boundary
-    free_left_up = int(start-q)
-    free_right_up = int((N-1) * q - end)
+    free_left_up = int(start)
+    free_right_up = int(N * q - (end-1))
 
     # Convert to base-grid samples available on each side
     free_left_base = free_left_up // q
@@ -93,8 +93,8 @@ def dct_upscale_with_boundaries(
 
     # Resolve mL, mR
     if boundary_samples is None:
-        mL = int(np.sqrt(max(free_left_base, 0) * 3))
-        mR = int(np.sqrt(max(free_right_base, 0) * 3))
+        mL = int(np.sqrt(max(free_left_base-1, 0) * 3))
+        mR = int(np.sqrt(max(free_right_base-1, 0) * 3))
     else:
         if np.isscalar(boundary_samples):
             mL = mR = int(boundary_samples)

@@ -127,13 +127,7 @@ def test_matches_reference_many_cases():
         assert relc < 6e-10, (i, N, q, aligned_start, end, relc, "dct upscale doesn't match original at known "
                                                                  "points")
 
-        try:
-            y_dct_upscale = dct_upscale_with_boundaries(x, start, end, q)
-        except ValueError as e:
-            # The boundary-aware variant requires extra guard samples; skip cases
-            # where the requested window is too close to the edges.
-            raise e
-            continue
+        y_dct_upscale = dct_upscale_with_boundaries(x, start, end, q)
 
         lowres_diff = y_dct_upscale[aligned_start - start::q] - x[lo: lo + Lslice]
         relc = np.linalg.norm(lowres_diff) / (np.linalg.norm(y_dct_upscale) + 1e-15)
@@ -165,6 +159,24 @@ def test_constant_signals():  # TODO: other functions as well
         c = rng.standard_normal()
         x = np.full(N, c)
         y = dirichlet_upscale_zoomfft(fft(x), start, end, q)
+        err = np.max(np.abs(y.real - c))
+        assert err < 5e-10, (N, q, start, end, err, "constant not preserved")
+        assert np.max(np.abs(y.imag)) < 2e-8, (N, q, start, end, "should be real")
+
+        try:
+            y = spectral_upscale(x, start, end, q)
+            err = np.max(np.abs(y.real - c))
+            assert err < 5e-10, (N, q, start, end, err, "constant not preserved")
+            assert np.max(np.abs(y.imag)) < 2e-8, (N, q, start, end, "should be real")
+        except ValueError:  # too close to boundary
+            pass
+
+        y = upscale_region_via_dct(x, start, end, q)
+        err = np.max(np.abs(y.real - c))
+        assert err < 5e-10, (N, q, start, end, err, "constant not preserved")
+        assert np.max(np.abs(y.imag)) < 2e-8, (N, q, start, end, "should be real")
+
+        y = dct_upscale_with_boundaries(x, start, end, q)
         err = np.max(np.abs(y.real - c))
         assert err < 5e-10, (N, q, start, end, err, "constant not preserved")
         assert np.max(np.abs(y.imag)) < 2e-8, (N, q, start, end, "should be real")
