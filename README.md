@@ -17,7 +17,7 @@ For general upscaling tasks without specific boundary assumptions, `dct_upscale_
 Install the dependencies with pip:
 
 ```bash
-python -m pip install numpy scipy matplotlib
+python -m pip install numpy scipy
 ```
 
 ## Quick start
